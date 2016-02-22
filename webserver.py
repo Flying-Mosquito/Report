@@ -20,8 +20,7 @@ class MyHandler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type',	'text/html')
                 self.end_headers()
-                self.wfile.write("hey, today is the" + str(time.localtime()[7]))
-                self.wfile.write(" day in the year " + str(time.localtime()[0]))
+                self.wfile.write("반갑습니다")
                 return
                 
             return
