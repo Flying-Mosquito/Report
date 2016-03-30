@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# ----- Äõ¸® ¸ğÀ½
+# ----- ì¿¼ë¦¬ ëª¨ìŒ
 get_useruid_nickname_query = "select useruid, nickname from  user where useruid=%s"
 check_duplicate_nickname_query = "select nickname from user where nickname=%s"
 
@@ -55,25 +55,45 @@ modify_quest_query = ('insert into user_quest'
                      'values(%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE '
                      'count=%s, status=%s')
 
-# ------ /Äõ¸® ¸ğÀ½
+equipment_info_field = ('equipmentuid equipment_id characteruid reinforce rpoint status UNIX_TIMESTAMP(gettime)').split()
+equipment_info_query = ("select {0} "
+                        "from user_equipment "
+                        "where useruid=%s and equipmentuid=%s".format(",".join(equipment_info_field)))
+equipment_all_query = "select {0} from user_equipment where useruid=%s".format(",".join(equipment_info_field))
+equipmentlist_info_query =  ("select {0} "
+                             "from user_equipment "
+                             "where useruid=%s and equipmentuid in ({1})".format(",".join(equipment_info_field), "{equipmentuid_list}"))
+get_equipment_time_query = "select UNIX_TIMESTAMP(gettime) from user_equipment where useruid=%s and equipmentuid=%s"
 
-# °ÔÀÓ¿¡ °¡ÀÔ µÈ À¯ÀúÀÎÁö È®ÀÎ
+status_query = "update user_equipment set status=%s, characteruid=%s where useruid=%s and equipmentuid=%s"
+
+update_query = "update user_equipment set reinforce=%s, rpoint=%s where useruid=%s and equipmentuid=%s"
+
+delete_equipment_query = "delete from user_equipment where useruid=%s and equipmentuid=%s"
+delete_equipmentlist_query = "delete from user_equipment where useruid=%s, equipmentuid in ({0})".format("{equipmentuid_list}")
+
+make_equipment_query = "insert into user_equipment (useruid, equipment_id) values (%s,%s)" 
+
+
+# ------ /ì¿¼ë¦¬ ëª¨ìŒ
+
+# ê²Œì„ì— ê°€ì… ëœ ìœ ì €ì¸ì§€ í™•ì¸
 def get_useruid_nickname_db(db, useruid, nickname):
     account_rs = db.query(get_useruid_nickname_query, (useruid,))
     return account_rs
 
-# ´Ğ³×ÀÓ Áßº¹ Ã¼Å©
+# ë‹‰ë„¤ì„ ì¤‘ë³µ ì²´í¬
 def check_duplicate_nickname_db(db, nickname):
     nick_rs = db.query(check_duplicate_nickname_query, (nickname,))
     return nick_rs
 
-# -- À¯ÀúÀÇ Ä£±¸µéÀ» ÀĞ¾î¿Â´Ù.
+# -- ìœ ì €ì˜ ì¹œêµ¬ë“¤ì„ ì½ì–´ì˜¨ë‹¤.
 def get_user_friend_list_db(db, useruid, status):
     rs = db.query(get_user_friend_list_query, (useruid, status))
-    # ½Å±ÔÀ¯ÀúÀÌ°Å³ª Ä£±¸°¡ ¾ø´Â À¯Àú¶ó¸é rs°¡ NoneÀÌ¶óµµ ¿À·ù°¡ ¾Æ´Ï´Ù.
+    # ì‹ ê·œìœ ì €ì´ê±°ë‚˜ ì¹œêµ¬ê°€ ì—†ëŠ” ìœ ì €ë¼ë©´ rsê°€ Noneì´ë¼ë„ ì˜¤ë¥˜ê°€ ì•„ë‹ˆë‹¤.
     return [x[0] for x in rs]
 
-# -- Ä£±¸ÀÇ Á¤º¸¸¦ ÀĞ¾î¿Â´Ù.
+# -- ì¹œêµ¬ì˜ ì •ë³´ë¥¼ ì½ì–´ì˜¨ë‹¤.
 def get_user_friend_info_db(db, useruid):
     rs = db.query(get_user_friend_info_query, (useruid,))
     if not rs:
@@ -88,92 +108,92 @@ def get_friend_level_db(db, useruid, lcharacteruid):
     
     return rs[0]
 
-# -- °¡ÀÔµÈ À¯ÀúÀÎ°¡ °Ë»ç
+# -- ê°€ì…ëœ ìœ ì €ì¸ê°€ ê²€ì‚¬
 def get_account_db(db, useruid):
     rs = db.query(get_account_query, (useruid,))
     if not rs:
         raise DBAccessError("get_account_db error, useruid could not be found", useruid=useruid)
 
-# -- À¯Àú Ä£±¸ ¸®½ºÆ® MAX È®ÀÎ
-# -- À¯Àú Ä£±¸ ¼ö¶ô ´ë±â ¸®½ºÆ® MAX È®ÀÎ
-# status = 10 -> Ä£±¸ ¸®½ºÆ®, status = 11 -> ¼ö¶ô ´ë±â ¸®½ºÆ®
+# -- ìœ ì € ì¹œêµ¬ ë¦¬ìŠ¤íŠ¸ MAX í™•ì¸
+# -- ìœ ì € ì¹œêµ¬ ìˆ˜ë½ ëŒ€ê¸° ë¦¬ìŠ¤íŠ¸ MAX í™•ì¸
+# status = 10 -> ì¹œêµ¬ ë¦¬ìŠ¤íŠ¸, status = 11 -> ìˆ˜ë½ ëŒ€ê¸° ë¦¬ìŠ¤íŠ¸
 def get_check_friend_list_db(db, useruid, status):
     rs = db.query(get_check_friend_list_query, (useruid, status))
     return rs[0][0]
 
-# -- À¯Àú Ä£±¸ »óÅÂ È®ÀÎ
-# ¼­·Î ÀÌ¹Ì Ä£±¸ »óÅÂÀÎÁö È®ÀÎ
+# -- ìœ ì € ì¹œêµ¬ ìƒíƒœ í™•ì¸
+# ì„œë¡œ ì´ë¯¸ ì¹œêµ¬ ìƒíƒœì¸ì§€ í™•ì¸
 def get_check_already_db(db, useruid1, useruid2, status):
     rs = db.query(get_check_already_query,(useruid1, useruid2, status))
     return rs
 
-# -- À¯Àú Ä£±¸ ¼ö¶ô ¸®½ºÆ® È®ÀÎ
-# ÀÌ¹Ì Ä£±¸ ½ÅÃ» »óÅÂÀÎÁö È®ÀÎ
+# -- ìœ ì € ì¹œêµ¬ ìˆ˜ë½ ë¦¬ìŠ¤íŠ¸ í™•ì¸
+# ì´ë¯¸ ì¹œêµ¬ ì‹ ì²­ ìƒíƒœì¸ì§€ í™•ì¸
 def get_check_friend_invite_db(db, invite_useruid, accept_useruid):
     rs = db.query(get_check_friend_invite_query, (invite_useruid, accept_useruid))
     return rs
 
-# -- À¯Àú Ä£±¸ ¼ö¶ô ¸®½ºÆ® MAX È®ÀÎ
+# -- ìœ ì € ì¹œêµ¬ ìˆ˜ë½ ë¦¬ìŠ¤íŠ¸ MAX í™•ì¸
 def get_check_max_friend_invite_db(db, accept_useruid, status):
     rs = db.query(get_check_max_friend_invite_query, (accept_useruid, status))
     return rs[0][0]
 
-# -- Ä£±¸ ¼ö¶ô ´ë±â ¸®½ºÆ® µî·Ï
+# -- ì¹œêµ¬ ìˆ˜ë½ ëŒ€ê¸° ë¦¬ìŠ¤íŠ¸ ë“±ë¡
 def insert_invitefriend_list_db(db, invite_useruid, accept_useruid, status):
     db.execute(insert_invitefriend_list_query, (invite_useruid, accept_useruid, status))
 
-# -- Ä£±¸ ¸®½ºÆ® µî·Ï
+# -- ì¹œêµ¬ ë¦¬ìŠ¤íŠ¸ ë“±ë¡
 def insert_friend_db(db, useruid1, useruid2, status):
     db.execute(insert_friend_query, (useruid1, useruid2, status, useruid2, useruid1, status , status))
 
-# -- Ä£±¸ »èÁ¦ »óÅÂ·Î º¯°æ
+# -- ì¹œêµ¬ ì‚­ì œ ìƒíƒœë¡œ ë³€ê²½
 def update_erase_friend_db(db, useruid1, useruid2, invite_status, erase_status):
     db.execute(update_friend_query, (erase_status, useruid1, useruid2, useruid2, useruid1, invite_status))
 
-# -- Ä£±¸ ¼ö¶ô ´ë±â ¸®½ºÆ® »èÁ¦
+# -- ì¹œêµ¬ ìˆ˜ë½ ëŒ€ê¸° ë¦¬ìŠ¤íŠ¸ ì‚­ì œ
 def delete_invite_friend_db(db, invite_useruid, accept_useruid, status):
     db.execute(delete_invite_friend_query, (invite_useruid, accept_useruid, status))
 
-# -- Ä£±¸ ¼ö¶ô ´ë±â ¸®½ºÆ® ºÒ·¯¿À±â
+# -- ì¹œêµ¬ ìˆ˜ë½ ëŒ€ê¸° ë¦¬ìŠ¤íŠ¸ ë¶ˆëŸ¬ì˜¤ê¸°
 def get_invite_friend_list_db(db, useruid, status):
     rs = db.query(get_invite_friend_list_query, (useruid, status))
-    # ½Å±ÔÀ¯ÀúÀÌ°Å³ª Ä£±¸°¡ ¾ø´Â À¯Àú¶ó¸é rs°¡ NoneÀÌ¶óµµ ¿À·ù°¡ ¾Æ´Ï´Ù.
+    # ì‹ ê·œìœ ì €ì´ê±°ë‚˜ ì¹œêµ¬ê°€ ì—†ëŠ” ìœ ì €ë¼ë©´ rsê°€ Noneì´ë¼ë„ ì˜¤ë¥˜ê°€ ì•„ë‹ˆë‹¤.
     return [x[0] for x in rs]
 
-# -- ´Ğ³×ÀÓÀ¸·Î °Ë»ö
+# -- ë‹‰ë„¤ì„ìœ¼ë¡œ ê²€ìƒ‰
 def get_userinfo_by_nickname_db(db, nickname):
     rs = db.query(get_userinfo_by_nickname_query, (u"{0}".format(nickname),))
     return rs
 
-# -- »õ Ä£±¸ ¿äÃ» °Ë»ö
+# -- ìƒˆ ì¹œêµ¬ ìš”ì²­ ê²€ìƒ‰
 def get_new_invite_friend_list_db(db, useruid, status, check_status):
     rs = db.query(get_new_invite_friend_list_query, (useruid, status, check_status))
     return [x[0] for x in rs]
 
-# -- Ä£±¸ ¿äÃ» new_check »óÅÂ¸¦ 0À¸·Î ¾÷µ¥ÀÌÆ®
+# -- ì¹œêµ¬ ìš”ì²­ new_check ìƒíƒœë¥¼ 0ìœ¼ë¡œ ì—…ë°ì´íŠ¸
 def update_new_check_invite_friend_db(db, useruid, check_status):
     db.execute(update_new_check_invite_friend_query, (check_status, useruid))
 
-# -- »õ Ä£±¸ °Ë»ö
+# -- ìƒˆ ì¹œêµ¬ ê²€ìƒ‰
 def get_new_friend_db(db, useruid, status, check_status):
     rs = db.query(get_new_friend_query, (useruid, status, check_status))
     return [x[0] for x in rs]
 
-# -- Ä£±¸ new_check »óÅÂ 0À¸·Î ¾÷µ¥ÀÌÆ®
+# -- ì¹œêµ¬ new_check ìƒíƒœ 0ìœ¼ë¡œ ì—…ë°ì´íŠ¸
 def update_new_check_friend_db(db, useruid, check_status):
     db.execute(update_new_check_friend_query, (check_status, useruid))
 
-# -- Å»ÅğÇÑ À¯ÀúÀÇ ¸ğµç Ä£±¸ »èÁ¦
+# -- íƒˆí‡´í•œ ìœ ì €ì˜ ëª¨ë“  ì¹œêµ¬ ì‚­ì œ
 def remove_all_friend_db(db, useruid):
     db.execute(remove_all_friend_query, (useruid, useruid))
 
-# -- Å»ÅğÇÑ À¯ÀúÀÇ ¼ö¶ô´ë±â¸®½ºÆ® »èÁ¦ ¹× Å»Åğ À¯Àú°¡ ½ÅÃ»ÇÑ Ä£±¸ ¼ö¶ô ¿äÃ» »èÁ¦
+# -- íƒˆí‡´í•œ ìœ ì €ì˜ ìˆ˜ë½ëŒ€ê¸°ë¦¬ìŠ¤íŠ¸ ì‚­ì œ ë° íƒˆí‡´ ìœ ì €ê°€ ì‹ ì²­í•œ ì¹œêµ¬ ìˆ˜ë½ ìš”ì²­ ì‚­ì œ
 def remove_all_invite_friend_db(db, useruid):
     db.execute(remove_all_invite_friend_query, (useruid, useruid))
 
-# -- Äù½ºÆ® °ü·Ã
+# -- í€˜ìŠ¤íŠ¸ ê´€ë ¨
 def get_questlist_db(db, useruid, status, quest_subtype=None):
-# -- Á¶°Ç¿¡ ¸Â´Â Á¤º¸ °¡Á®¿À±â
+# -- ì¡°ê±´ì— ë§ëŠ” ì •ë³´ ê°€ì ¸ì˜¤ê¸°
     if quest_subtype != None:
         tempq = quest_list_info_query.format(quest_status_list=",".join(map(str, status)))
         rs = db.query(tempq, (useruid, quest_subtype, ))
@@ -181,7 +201,7 @@ def get_questlist_db(db, useruid, status, quest_subtype=None):
         rs = db.query(quest_reward_object_query, (useruid, status,))
     return rs if len(rs) !=0 else None
 
-# -- useruid ¿Í questid ·Î Á¤º¸ ²¨³»¿À±â
+# -- useruid ì™€ questid ë¡œ ì •ë³´ êº¼ë‚´ì˜¤ê¸°
 def get_quest_db(db, useruid, quest_id):
     rs = db.query(quest_info_query, (useruid, quest_id,))
     if not rs:
@@ -189,7 +209,7 @@ def get_quest_db(db, useruid, quest_id):
 
     return rs[0]
 
-# -- ÀüÃ¼ Äù½ºÆ® Á¤º¸ ºÒ·¯¿À±â
+# -- ì „ì²´ í€˜ìŠ¤íŠ¸ ì •ë³´ ë¶ˆëŸ¬ì˜¤ê¸°
 def get_quest_all_db(db, useruid):
     rs = db.query(quest_all_info_query, (useruid,))
     #if not rs:
@@ -197,7 +217,145 @@ def get_quest_all_db(db, useruid):
     return rs
 
 
-# -- Äù½ºÆ® ¾÷µ¥ÀÌÆ® ( INSERT )
+# -- í€˜ìŠ¤íŠ¸ ì—…ë°ì´íŠ¸ ( INSERT )
 def modify_quest_db(db, useruid, quest):
 
     db.execute(modify_quest_query, (useruid, quest.quest_id, quest.quest_subtype, quest.count, quest.status, quest.count, quest.status,))
+
+# -- equipment ì¸ì„œíŠ¸
+def insert_equipment_db(db, useruid, equipment):
+    rs = db.execute(make_equipment_query, (useruid, equipment.equipment_id,))
+    return rs.lastrowid()
+
+# -- equipment ìƒì„± ì‹œê°„
+def get_equipment_ctime_db(db, useruid, equipmentuid):
+    rs = db.query(get_equipment_time_query, (useruid, equipmentuid,))
+    if not rs:
+        raise DBAccessError("get_equipment_ctime_db error",useruid=useruid,equipmentuid=equipmentuid)
+
+    return rs[0][0]
+
+# -- ëª¨ë“  ì •ë³´
+def get_allequipment_db(db, useruid):
+    rs = db.query(equipment_all_query, (useruid,))
+    return rs
+
+# -- í˜„ì¬ equipment ì •ë³´
+def get_equipment_db(db, useruid, equipmentuid):
+    rs = db.query(equipment_info_query, (useruid, equipmentuid))
+    if not rs:
+        raise DBAccessError("get_equipment_db error", useruid=useruid, equipmentuid=equipmentuid)
+
+    return rs
+
+def get_equipment_list_db(db, useruid, equipmentuid_list):
+    #  DBë¡œë¶€í„° equipment listì˜ ì •ë³´ë¥¼ ë°›ì•„ì˜¨ë‹¤
+    tempq = equipmentlist_info_query.format(equipmentuid_list=",".join(map(str, equipmentuid_list)))
+    rs = db.query(tempq, (useruid,))
+    if not rs:
+        raise DBAccessError("get_equipment_list_db error", useruid=useruid, equipmentuid_list=equipmentuid_list)
+
+    # rsê°€ ë¹ˆê°’ì€ ì•„ë‹Œë° ìœ ë‹›ì •ë³´ë¥¼ ìš”ì²­í•œ equipmentuid_listì˜ ìˆ«ìë³´ë‹¤ ì‘ìœ¼ë©´
+    # í•´ë‹¹ ìœ ì €ê°€ ê·¸ ìœ ë‹›ì„ ë³´ìœ í•˜ê³  ìˆì§€ ì•Šì€ë° ìš”ì²­ í•œ ê²½ìš°ë¡œ ì—ëŸ¬ 
+    if len(rs) != len(equipmentuid_list):
+        raise DBAccessError("get_equipment_list_db error This user have not equipmentuid", useruid=useruid, equipmentuid_list=equipmentuid_list)
+
+    return rs
+
+def update_equipment_db(db, useruid, equipment):
+    #  ë³€ê²½ëœ ì¥ë¹„ì˜ ì •ë³´ë¥¼ ë°›ì•„ì™€ DBì— ì—…ë°ì´íŠ¸ ì‹œí‚¨ë‹¤.
+    arg = (equipment.reinforce, equipment.rpoint, useruid, equipment.equipmentuid)
+    db.execute(update_query, arg)
+
+def status_equipment_db(db, useruid, equipment):
+    # ì¥ë¹„ì˜ ì¥ì°© í•´ì œì‹œ statusë¥¼ ë°›ì•„ì™€ DBì— ì—…ë°ì´íŠ¸ ì‹œí‚¨ë‹¤.
+    arg = (equipment.status, equipment.characteruid, useruid, equipment.equipmentuid)
+    db.execute(status_query, arg)
+
+def delete_equipment_db(db, useruid, equipmentuid):
+    #   equipmentuidë¥¼ ì‚¬ìš©í•˜ì—¬ DBì—ì„œ ì¥ë¹„ì˜ ì •ë³´ë¥¼ ì‚­ì œí•œë‹¤
+    db.execute(delete_equipment_query, (useruid, equipmentuid,))
+
+# -- ë¦¬ìŠ¤íŠ¸ì—ì„œ uid ê°€ì ¸ì˜¤ê¸°
+def get_equipmentuid_list_db(db, useruid, equipmentid_list):
+    q = "select equipmentuid from user_equipment where useruid=%s and equipment_id in ({0})".format("{equipmentid_list}")
+    tempq = q.format(equipmentid_list=",".join(map(str, equipmentid_list)))
+    rs = db.query(tempq, (useruid,))
+    if not rs:
+        raise DBAccessError("get_equipmentuid_list_db error", useruid=useruid, equipmentid_list=equipmentid_list)
+
+    
+    if len(rs) != len(equipmentid_list):
+        raise DBAccessError("get_equipmentuid_list_db length error", useruid=useruid, equipmentid_list=equipmentid_list)
+
+    return rs
+
+# -- ì¥ë¹„ status ì—…ë°ì´íŠ¸
+def clear_equipment_db(db, useruid, characteruid, equipmentuid, normal_status):
+    db.execute(status_query, (normal_status, characteruid, useruid, equipmentuid))
+
+
+# -- ìœ ì € ê³„ì • ìƒíƒœ ë³€ê²½(ì •ìƒ,íƒˆí‡´,ê°•ì œì‚­ì œ)
+def account_update_status_db(db, useruid, status):
+    db.execute(account_update_status_query, (status, useruid))
+
+# -- ìœ ì €ê°€ í´ë¦¬ì–´í•œ ë¯¸ì…˜ ì •ë³´
+def get_all_mission_of_user_db(db, useruid):
+    rs = db.query(get_all_mission_of_user_query,(useruid,))
+    return rs
+
+# -- ìœ ì €ê°€ í´ë¦¬ì–´í•œ ë¯¸ì…˜ì„ ê¸°ë¡
+def insert_complete_mission_db(db, useruid, mission_uid, stage_id):
+    db.execute(insert_complete_mission_query, (useruid, mission_uid, stage_id))
+
+# -- ë§ˆì§€ë§‰ í´ë¦¬ì–´í•œ ìŠ¤í…Œì´ì§€
+def update_last_clear_stageid_db(db, useruid, stageid):
+    db.execute(update_last_clear_stageid_query, (stageid, useruid))
+
+# -- í˜„ì¬ ìŠ¤í…Œì´ì§€ ì •ë³´
+def get_stage_info_db(db, useruid, stage_id):
+    rs = db.query(stage_info_query, (useruid, stage_id))
+    return rs
+
+# -- ìŠ¤í…Œì´ì§€ ì •ë³´ ì´ˆê¸°í™”
+def init_stage_info_db(db, useruid, not_access, unused_exppotion):
+    db.execute(init_stage_info_query, (not_access, unused_exppotion, useruid))
+
+# -- ìŠ¤í…Œì´ì§€ ì •ë³´ ì¸ì„œíŠ¸ 
+def insert_stage_info_db(db, useruid, stage_id, stage_uid, lcharacteruid, p1characteruid, p2characteruid, use_exp_potion, access, in_fever_time, reward_pot_type, reward_pot_id, reward_pot_count, add_reward_pot_type, add_reward_pot_id, add_reward_pot_count, event_type_list, event_magnification_list):
+    rs = db.execute(insert_stage_info_query, (useruid, stage_id, stage_uid, lcharacteruid,
+               p1characteruid, p2characteruid, access, in_fever_time,
+               reward_pot_type, reward_pot_id, reward_pot_count,
+               add_reward_pot_type, add_reward_pot_id, add_reward_pot_count,
+               json.dumps(event_type_list), json.dumps(event_magnification_list),
+               stage_uid, lcharacteruid,
+               p1characteruid, p2characteruid, use_exp_potion, access, in_fever_time,
+               reward_pot_type, reward_pot_id, reward_pot_count,
+               add_reward_pot_type, add_reward_pot_id, add_reward_pot_count,
+               json.dumps(event_type_list), json.dumps(event_magnification_list)))
+    if rs.rowcount() == 0:
+        raise DBAccessError("insert_stage_info_db error", useruid=useruid)
+
+# -- ìŠ¤í…Œì´ì§€ ë³´ìƒ
+def insert_stage_reward_info_db(db, useruid, stage_id, stage_uid, not_access, access):
+    rs = db.execute(insert_stage_reward_info_query, (not_access, useruid, stage_id, stage_uid, access))
+    if rs.rowcount() == 0:
+        raise DBAccessError("insert_stage_reward_info_db error, this stage access status is not_access", useruid=useruid, stage_id=stage_id, stage_uid=stage_uid)
+
+# -- ì…ì¥ ê°€ëŠ¥í•œ ìŠ¤í…Œì´ì§€ì¸ì§€
+def is_possible_enter_stage_db(db, useruid):
+    rs = db.query(is_possible_enter_stage_query, (useruid,))
+    if not rs:
+        raise DBAccessError("is_possible_enter_stage_query error", useruid=useruid)
+    return rs[0][0]
+
+# -- ìŠ¤í…Œì´ì§€ í´ë¦¬ì–´ë¥¼ ì—…ë°ì´íŠ¸
+def update_stage_clear_info_db(db, useruid, stage_id):
+    db.execute(update_stage_clear_info_query, (useruid, stage_id))
+
+# -- ì¬ë„ì „ íšŒìˆ˜
+def get_stage_retry_check_db(db, useruid, stage_id, stage_uid):
+    rs = db.query(get_stage_retry_check_query, (useruid, stage_id, stage_uid))
+    if not rs:
+        raise DBAccessError("get_stage_retry_check_db error", useruid=useruid, stage_id=stage_id, stage_uid=stage_uid)
+    return rs[0][0]
