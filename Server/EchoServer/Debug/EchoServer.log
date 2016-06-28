@@ -1,0 +1,23 @@
+﻿빌드 시작: 2016-05-16 오후 12:01:45
+     1>2 노드의 "C:\Users\user\Documents\카카오톡 받은 파일\Nos-recent-Server-work-master\Server백업\EchoServer\EchoServer.vcxproj" 프로젝트(build 대상)입니다.
+     1>InitializeBuildStatus:
+         "AlwaysCreate"이(가) 지정되었기 때문에 "Debug\EchoServer.unsuccessfulbuild"을(를) 만들고 있습니다.
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt Client_info.cpp Memorypool.cpp Room_info.cpp Sector.cpp Server.cpp study.cpp
+         study.cpp
+     1>c:\users\user\documents\카카오톡 받은 파일\nos-recent-server-work-master\server백업\echoserver\study.cpp(6): fatal error C1083: 포함 파일을 열 수 없습니다. 'thread': No such file or directory
+         Server.cpp
+         Sector.cpp
+         Room_info.cpp
+     1>c:\users\user\documents\카카오톡 받은 파일\nos-recent-server-work-master\server백업\echoserver\room_info.cpp(17): error C2143: 구문 오류 : ','이(가) ':' 앞에 없습니다.
+     1>c:\users\user\documents\카카오톡 받은 파일\nos-recent-server-work-master\server백업\echoserver\room_info.cpp(17): error C3531: 't': 형식에 'auto'가 포함된 기호에는 이니셜라이저가 있어야 합니다.
+     1>c:\users\user\documents\카카오톡 받은 파일\nos-recent-server-work-master\server백업\echoserver\room_info.cpp(18): error C2143: 구문 오류 : ';'이(가) '{' 앞에 없습니다.
+     1>c:\users\user\documents\카카오톡 받은 파일\nos-recent-server-work-master\server백업\echoserver\room_info.cpp(25): error C2043: break가 잘못되었습니다.
+         Memorypool.cpp
+         Client_info.cpp
+         코드를 생성하고 있습니다...
+     1>"C:\Users\user\Documents\카카오톡 받은 파일\Nos-recent-Server-work-master\Server백업\EchoServer\EchoServer.vcxproj" 프로젝트를 빌드했습니다(build 대상). - 실패
+
+빌드하지 못했습니다.
+
+경과 시간: 00:00:02.47
